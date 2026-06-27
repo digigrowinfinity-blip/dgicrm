@@ -24,18 +24,47 @@ export default function Login() {
   const [error, setError] = useState('')
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 900))
-    if (email === 'admin@metalead.com' && password === 'admin123') {
-      login({ name: 'Admin User', email, role: 'Admin' })
+  e.preventDefault()
+
+  setLoading(true)
+  setError('')
+
+  try {
+    const response = await fetch(
+      'https://meta-crm-backend.onrender.com/api/auth/login',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    console.log(data)
+
+    if (data.success) {
+      login(
+        data.user,
+        data.token
+      )
+
       navigate('/')
     } else {
-      setError('Invalid credentials. Try admin@metalead.com / admin123')
+      setError(data.message || 'Login failed')
     }
-    setLoading(false)
+  } catch (err) {
+    console.error(err)
+    setError('Server error')
   }
+
+  setLoading(false)
+}
 
   const handleFacebook = async () => {
     setFbLoading(true)
