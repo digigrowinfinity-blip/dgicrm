@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { authAPI } from '../services/api'
 
 const AppContext = createContext()
 
@@ -18,7 +19,9 @@ export function AppProvider({ children }) {
     setUser(userData)
     localStorage.setItem('mlcrm_user', JSON.stringify(userData))
   }
-  const logout = () => {
+
+  const logout = async () => {
+    try { await authAPI.logout() } catch {}
     setUser(null)
     localStorage.removeItem('mlcrm_user')
   }
