@@ -13,6 +13,8 @@ export default function Leads() {
   const [assigned, setAssigned] = useState('')
   const [page, setPage] = useState(1)
   const [editStatus, setEditStatus] = useState({})
+  const [allLeads, setAllLeads] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const filtered = useMemo(() => allLeads.filter(l => {
     if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.phone.includes(search) && !l.email.toLowerCase().includes(search.toLowerCase())) return false
