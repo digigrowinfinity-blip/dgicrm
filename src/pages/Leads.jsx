@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, Download, RefreshCw, Eye, Edit2, MessageCircle, Phone, ChevronLeft, ChevronRight } from 'lucide-react'
 import { StatusBadge, tableRowVariants, Select } from '../components/ui'
-import { leadStatuses, statusColors, teamMembers, campaigns } from '../data'
+import { leads as allLeads, leadStatuses, statusColors, teamMembers, campaigns } from '../data'
+
 const PER_PAGE = 7
 
 export default function Leads() {
@@ -13,41 +14,6 @@ export default function Leads() {
   const [assigned, setAssigned] = useState('')
   const [page, setPage] = useState(1)
   const [editStatus, setEditStatus] = useState({})
-  const [allLeads, setAllLeads] = useState([])
-  const [loading, setLoading] = useState(true)
-
-
-useEffect(() => {
-  const fetchLeads = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        "https://meta-crm-backend.onrender.com/api/leads",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      console.log("API Response:", data);
-
-      setAllLeads(data.leads || []);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchLeads();
-}, []);
-
-
-  
 
   const filtered = useMemo(() => allLeads.filter(l => {
     if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.phone.includes(search) && !l.email.toLowerCase().includes(search.toLowerCase())) return false
@@ -68,20 +34,7 @@ useEffect(() => {
   const assignedOpts = [{ value: '', label: 'All Agents' }, ...teamMembers.map(m => ({ value: m.name, label: m.name }))]
   const statusDropdownOpts = leadStatuses.map(s => ({ value: s, label: s }))
 
-
-
-   if (loading) {
   return (
-    <div className="p-10 text-center">
-      Loading Leads...
-    </div>
-  );
-}
-
-return (
-  <div className="space-y-5">
-    
-    
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
