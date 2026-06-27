@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, Zap, ArrowRight, CheckCircle } from 'lucide-react'
-import { useApp } from './context/AppContext'
+import { useApp } from '../context/AppContext'
 
 function FacebookIcon() {
   return (
