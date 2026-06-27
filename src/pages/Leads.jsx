@@ -68,7 +68,7 @@ useEffect(() => {
   const assignedOpts = [{ value: '', label: 'All Agents' }, ...teamMembers.map(m => ({ value: m.name, label: m.name }))]
   const statusDropdownOpts = leadStatuses.map(s => ({ value: s, label: s }))
 
-  return (
+
 
     if (loading) {
   return (
