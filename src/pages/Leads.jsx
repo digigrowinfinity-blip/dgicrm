@@ -70,8 +70,16 @@ useEffect(() => {
 
 
 
-    
+   if (loading) {
   return (
+    <div className="p-10 text-center">
+      Loading Leads...
+    </div>
+  );
+}
+
+return (
+  <div className="space-y-5">
     
     
     <div className="space-y-5">
