@@ -69,6 +69,16 @@ useEffect(() => {
   const statusDropdownOpts = leadStatuses.map(s => ({ value: s, label: s }))
 
   return (
+
+    if (loading) {
+  return (
+    <div className="p-10 text-center">
+      Loading Leads...
+    </div>
+  );
+}
+
+    
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
