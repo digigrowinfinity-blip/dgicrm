@@ -16,6 +16,39 @@ export default function Leads() {
   const [allLeads, setAllLeads] = useState([])
   const [loading, setLoading] = useState(true)
 
+
+useEffect(() => {
+  const fetchLeads = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "https://meta-crm-backend.onrender.com/api/leads",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("API Response:", data);
+
+      setAllLeads(data.leads || []);
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchLeads();
+}, []);
+
+
+  
+
   const filtered = useMemo(() => allLeads.filter(l => {
     if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.phone.includes(search) && !l.email.toLowerCase().includes(search.toLowerCase())) return false
     if (campaign && l.campaign !== campaign) return false
