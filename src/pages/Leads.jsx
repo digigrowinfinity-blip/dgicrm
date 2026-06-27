@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, Download, RefreshCw, Eye, Edit2, MessageCircle, Phone, ChevronLeft, ChevronRight } from 'lucide-react'
 import { StatusBadge, tableRowVariants, Select } from '../components/ui'
-import { leads as allLeads, leadStatuses, statusColors, teamMembers, campaigns } from '../data'
-
+import { leadStatuses, statusColors, teamMembers, campaigns } from '../data'
 const PER_PAGE = 7
 
 export default function Leads() {
