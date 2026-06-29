@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  Users, UserPlus, Phone, RefreshCw, UserX, XCircle, Clock,
-  PhoneOff, AlertCircle, CheckCircle2, TrendingUp, BarChart3, Target
-} from 'lucide-react'
+import { Users, UserPlus, Phone, RefreshCw, UserX, Clock, PhoneOff, AlertCircle, CheckCircle2, TrendingUp, BarChart3, Target } from 'lucide-react'
 import { StatCard, StatusBadge, Skeleton } from '../components/ui'
-import { leadsAPI } from '../services/api'
+import { leadsAPI, teamAPI } from '../services/api'
 import { statusColors } from '../data'
 
 const statCards = [
@@ -25,8 +22,6 @@ const statCards = [
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [recentLeads, setRecentLeads] = useState([])
-  const [campaigns, setCampaigns] = useState([])
-  const [teamPerf, setTeamPerf] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -37,9 +32,8 @@ export default function Dashboard() {
           leadsAPI.stats(),
           leadsAPI.getAll({ page: 1, limit: 5 }),
         ])
+        // Backend returns { success, stats: { totalLeads, newLeads, ... } }
         setStats(statsRes.stats)
-        setCampaigns(statsRes.campaigns || [])
-        setTeamPerf(statsRes.teamPerformance || [])
         setRecentLeads(leadsRes.leads || [])
       } catch (e) {
         setError(e.message)
@@ -50,7 +44,9 @@ export default function Dashboard() {
     load()
   }, [])
 
-  const conversionRate = stats ? (((stats.converted || 0) / (stats.totalLeads || 1)) * 100).toFixed(1) : '0.0'
+  const conversionRate = stats
+    ? (((stats.converted || 0) / (stats.totalLeads || 1)) * 100).toFixed(1)
+    : '0.0'
 
   if (loading) return (
     <div className="space-y-6">
@@ -63,8 +59,8 @@ export default function Dashboard() {
 
   if (error) return (
     <div className="glass-card p-8 text-center">
-      <p className="text-red-500 font-semibold">{error}</p>
-      <p className="text-slate-400 text-sm mt-2">Backend se connect karo — check karo ki server chal raha hai aur .env sahi hai.</p>
+      <p className="text-red-500 font-semibold mb-2">Error: {error}</p>
+      <button onClick={() => window.location.reload()} className="btn-primary text-sm mt-2">Retry</button>
     </div>
   )
 
@@ -75,7 +71,6 @@ export default function Dashboard() {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back! Here's your lead overview.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((card, i) => (
           <StatCard key={card.key} title={card.title} value={stats?.[card.key] || 0}
@@ -84,24 +79,23 @@ export default function Dashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Recent Leads */}
         <div className="lg:col-span-2 glass-card overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/60 dark:border-slate-700/60">
             <div className="flex items-center gap-2">
               <Users size={18} className="text-primary-600" />
               <h2 className="font-bold text-slate-800 dark:text-slate-100">Recent Leads</h2>
             </div>
-            <Link to="/leads" className="text-sm text-primary-600 hover:text-primary-700 font-semibold">View all →</Link>
+            <Link to="/leads" className="text-sm text-primary-600 font-semibold">View all →</Link>
           </div>
           <div className="overflow-x-auto">
             {recentLeads.length === 0 ? (
-              <p className="text-center py-12 text-slate-400">Koi leads nahi mili. Pehle kuch leads add karo.</p>
+              <p className="text-center py-12 text-slate-400">Koi leads nahi hain abhi.</p>
             ) : (
               <table className="w-full">
                 <thead>
                   <tr className="text-left bg-slate-50/80 dark:bg-slate-800/60">
                     {['Name', 'Status', 'Campaign', 'Assigned To'].map(h => (
-                      <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{h}</th>
+                      <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -117,9 +111,7 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3"><StatusBadge status={lead.status} colors={statusColors} /></td>
                       <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400 max-w-[140px] truncate">{lead.campaign_name || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {lead.assigned_user?.name || '—'}
-                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{lead.assigned_user?.name || '—'}</td>
                     </motion.tr>
                   ))}
                 </tbody>
@@ -128,7 +120,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Conversion Widget */}
         <div className="space-y-4">
           <div className="glass-card p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -144,7 +135,7 @@ export default function Dashboard() {
                     strokeDasharray={`${conversionRate}, 100`}
                     initial={{ strokeDasharray: '0, 100' }}
                     animate={{ strokeDasharray: `${conversionRate}, 100` }}
-                    transition={{ duration: 1.2, delay: 0.5, ease: 'easeOut' }} />
+                    transition={{ duration: 1.2, delay: 0.5 }} />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
@@ -153,11 +144,10 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{stats?.converted || 0} of {stats?.totalLeads || 0} leads converted</p>
+              <p className="text-sm text-slate-500">{stats?.converted || 0} of {stats?.totalLeads || 0} converted</p>
             </div>
           </div>
 
-          {/* Status Overview */}
           <div className="glass-card p-5">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 size={16} className="text-primary-600" />
@@ -168,7 +158,7 @@ export default function Dashboard() {
                 { label: 'Converted', val: stats?.converted || 0, color: 'bg-green-500' },
                 { label: 'Follow Up', val: stats?.followUps || 0, color: 'bg-yellow-500' },
                 { label: 'Contacted', val: stats?.contacted || 0, color: 'bg-blue-500' },
-                { label: 'New',       val: stats?.newLeads || 0, color: 'bg-violet-500' },
+                { label: 'New', val: stats?.newLeads || 0, color: 'bg-violet-500' },
               ].map(item => (
                 <div key={item.label}>
                   <div className="flex justify-between text-xs mb-1">
@@ -179,64 +169,12 @@ export default function Dashboard() {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${stats?.totalLeads > 0 ? (item.val / stats.totalLeads) * 100 : 0}%` }}
-                      transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+                      transition={{ duration: 0.8, delay: 0.4 }}
                       className={`h-full rounded-full ${item.color}`} />
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Campaign Performance + Team */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="glass-card overflow-hidden">
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-200/60 dark:border-slate-700/60">
-            <TrendingUp size={18} className="text-primary-600" />
-            <h2 className="font-bold text-slate-800 dark:text-slate-100">Campaign Performance</h2>
-          </div>
-          <div className="p-4 space-y-3">
-            {campaigns.length === 0 ? <p className="text-center py-8 text-slate-400 text-sm">Koi campaign data nahi</p> :
-              campaigns.map((c, i) => (
-                <motion.div key={c.name} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 + 0.2 }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{c.name}</p>
-                    <p className="text-xs text-slate-400">{c.total} leads</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-green-600">{c.converted}</p>
-                    <p className="text-xs text-slate-400">{c.convRate}% conv.</p>
-                  </div>
-                </motion.div>
-              ))}
-          </div>
-        </div>
-
-        <div className="glass-card overflow-hidden">
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-200/60 dark:border-slate-700/60">
-            <Users size={18} className="text-primary-600" />
-            <h2 className="font-bold text-slate-800 dark:text-slate-100">Team Performance</h2>
-          </div>
-          <div className="p-4 space-y-3">
-            {teamPerf.length === 0 ? <p className="text-center py-8 text-slate-400 text-sm">Team data nahi mila</p> :
-              teamPerf.map((m, i) => (
-                <motion.div key={m.userId} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 + 0.2 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <div className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {m.name?.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{m.name}</p>
-                    <p className="text-xs text-slate-400">{m.total} leads</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-green-600">{m.convRate}%</p>
-                    <p className="text-xs text-slate-400">conv. rate</p>
-                  </div>
-                </motion.div>
-              ))}
           </div>
         </div>
       </div>
