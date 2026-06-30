@@ -84,6 +84,8 @@ export const teamAPI = {
 export const settingsAPI = {
   get:    ()     => api.get('/settings'),
   update: (data) => api.put('/settings', data),
+  uploadLogo: (file_base64, file_name, content_type) =>
+    api.post('/settings/logo', { file_base64, file_name, content_type }),
 }
 
 export default api
