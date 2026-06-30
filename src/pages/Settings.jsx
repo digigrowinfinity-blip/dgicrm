@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, Tag, Shield, Bell, Plus, X, Check, Save, Loader } from 'lucide-react'
+import { Building2, Tag, Shield, Bell, Plus, X, Check, Save, Loader, Upload } from 'lucide-react'
 import { settingsAPI } from '../services/api'
 
 function Section({ title, icon: Icon, children, delay = 0 }) {
@@ -30,10 +30,12 @@ const rolePermissions = {
 export default function Settings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [error, setError] = useState('')
   const [savedMsg, setSavedMsg] = useState(false)
+  const fileInputRef = useRef(null)
 
-  const [company, setCompany] = useState({ name: '', timezone: '' })
+  const [company, setCompany] = useState({ name: '', timezone: '', logo_url: '' })
   const [statuses, setStatuses] = useState([])
   const [newStatus, setNewStatus] = useState('')
   const [sources, setSources] = useState([])
@@ -44,7 +46,7 @@ export default function Settings() {
       try {
         const res = await settingsAPI.get()
         const s = res.settings
-        setCompany({ name: s.company_name || '', timezone: s.timezone || 'Asia/Kolkata (IST)' })
+        setCompany({ name: s.company_name || '', timezone: s.timezone || 'Asia/Kolkata (IST)', logo_url: s.logo_url || '' })
         setStatuses(s.lead_statuses || [])
         setSources(s.lead_sources || [])
         setNotifications(s.notifications || {})
@@ -73,6 +75,38 @@ export default function Settings() {
       alert('Save nahi hua: ' + e.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleLogoClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleLogoChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Logo 2MB se chota hona chahiye')
+      return
+    }
+
+    setUploadingLogo(true)
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result.split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+
+      const res = await settingsAPI.uploadLogo(base64, file.name, file.type)
+      setCompany(c => ({ ...c, logo_url: res.logo_url }))
+    } catch (err) {
+      alert('Logo upload nahi hua: ' + err.message)
+    } finally {
+      setUploadingLogo(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -135,10 +169,18 @@ export default function Settings() {
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Company Logo</label>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 font-bold text-xl">
-                {company.name.slice(0, 2).toUpperCase() || 'ML'}
-              </div>
-              <button className="btn-secondary text-sm" disabled>Upload Logo (coming soon)</button>
+              {company.logo_url ? (
+                <img src={company.logo_url} alt="logo" className="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-slate-700" />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 font-bold text-xl">
+                  {company.name.slice(0, 2).toUpperCase() || 'ML'}
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+              <button onClick={handleLogoClick} disabled={uploadingLogo} className="btn-secondary text-sm flex items-center gap-2">
+                {uploadingLogo ? <Loader size={14} className="animate-spin" /> : <Upload size={14} />}
+                {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
+              </button>
             </div>
           </div>
           <div>
