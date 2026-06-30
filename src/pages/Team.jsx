@@ -75,7 +75,7 @@ export default function Team() {
     setLoading(true)
     try {
       const res = await teamAPI.getAll({ limit: 50 })
-      setMembers(res.data || [])
+      setMembers(res.members || [])
     } catch (e) { setError(e.message) }
     finally { setLoading(false) }
   }
