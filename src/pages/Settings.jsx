@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Building2, Tag, Shield, Bell, Plus, X, Check, Save } from 'lucide-react'
-import { leadStatuses } from '../data'
+import { Building2, Tag, Shield, Bell, Plus, X, Check, Save, Loader } from 'lucide-react'
+import { settingsAPI } from '../services/api'
 
 function Section({ title, icon: Icon, children, delay = 0 }) {
   return (
@@ -28,17 +28,52 @@ const rolePermissions = {
 }
 
 export default function Settings() {
-  const [company, setCompany] = useState({ name: 'Meta Lead Agency', timezone: 'Asia/Kolkata (IST)' })
-  const [statuses, setStatuses] = useState([...leadStatuses])
-  const [newStatus, setNewStatus] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
   const [savedMsg, setSavedMsg] = useState(false)
-  const [notifications, setNotifications] = useState({
-    newLead: true, followUp: true, conversion: true, teamUpdate: false, dailyReport: true,
-  })
 
-  const handleSave = () => {
-    setSavedMsg(true)
-    setTimeout(() => setSavedMsg(false), 2000)
+  const [company, setCompany] = useState({ name: '', timezone: '' })
+  const [statuses, setStatuses] = useState([])
+  const [newStatus, setNewStatus] = useState('')
+  const [sources, setSources] = useState([])
+  const [notifications, setNotifications] = useState({})
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await settingsAPI.get()
+        const s = res.settings
+        setCompany({ name: s.company_name || '', timezone: s.timezone || 'Asia/Kolkata (IST)' })
+        setStatuses(s.lead_statuses || [])
+        setSources(s.lead_sources || [])
+        setNotifications(s.notifications || {})
+      } catch (e) {
+        setError(e.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await settingsAPI.update({
+        company_name: company.name,
+        timezone: company.timezone,
+        lead_statuses: statuses,
+        lead_sources: sources,
+        notifications,
+      })
+      setSavedMsg(true)
+      setTimeout(() => setSavedMsg(false), 2000)
+    } catch (e) {
+      alert('Save nahi hua: ' + e.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const addStatus = () => {
@@ -50,6 +85,28 @@ export default function Settings() {
 
   const removeStatus = (s) => setStatuses(st => st.filter(x => x !== s))
 
+  const toggleSource = (name) => {
+    setSources(prev => prev.map(s => s.name === name ? { ...s, enabled: !s.enabled } : s))
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <div className="h-10 w-48 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+        <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card p-8 text-center max-w-lg">
+        <p className="text-red-500 font-semibold mb-2">Settings load nahi hue</p>
+        <p className="text-slate-400 text-sm">{error}</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
@@ -60,9 +117,11 @@ export default function Settings() {
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={handleSave}
+          disabled={saving}
           className="btn-primary flex items-center gap-2 text-sm"
         >
-          {savedMsg ? <><Check size={15} />Saved!</> : <><Save size={15} />Save Changes</>}
+          {saving ? <Loader size={15} className="animate-spin" /> : savedMsg ? <Check size={15} /> : <Save size={15} />}
+          {saving ? 'Saving...' : savedMsg ? 'Saved!' : 'Save Changes'}
         </motion.button>
       </div>
 
@@ -77,9 +136,9 @@ export default function Settings() {
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Company Logo</label>
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 font-bold text-xl">
-                ML
+                {company.name.slice(0, 2).toUpperCase() || 'ML'}
               </div>
-              <button className="btn-secondary text-sm">Upload Logo</button>
+              <button className="btn-secondary text-sm" disabled>Upload Logo (coming soon)</button>
             </div>
           </div>
           <div>
@@ -125,11 +184,11 @@ export default function Settings() {
         <div className="mt-6">
           <h3 className="font-semibold text-sm text-slate-700 dark:text-slate-300 mb-3">Lead Sources</h3>
           <div className="space-y-2">
-            {['Meta Ads', 'Google Ads', 'WhatsApp', 'Manual Entry', 'Website Form', 'Referral'].map(src => (
-              <div key={src} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                <span className="text-sm text-slate-700 dark:text-slate-300">{src}</span>
+            {sources.map(src => (
+              <div key={src.name} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <span className="text-sm text-slate-700 dark:text-slate-300">{src.name}</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" defaultChecked className="sr-only peer" />
+                  <input type="checkbox" checked={src.enabled} onChange={() => toggleSource(src.name)} className="sr-only peer" />
                   <div className="w-9 h-5 bg-slate-300 peer-checked:bg-primary-600 rounded-full transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-all peer-checked:after:translate-x-4" />
                 </label>
               </div>
@@ -172,7 +231,7 @@ export default function Settings() {
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={notifications[item.key]}
+                  checked={!!notifications[item.key]}
                   onChange={e => setNotifications(n => ({ ...n, [item.key]: e.target.checked }))}
                   className="sr-only peer"
                 />
