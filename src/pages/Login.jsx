@@ -22,6 +22,7 @@ export default function Login() {
   const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fbLoading, setFbLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -39,22 +40,22 @@ export default function Login() {
   }
 
   const handleFacebookLogin = async () => {
-  setFbLoading(true)
-  setError('')
-  try {
-    const res = await fetch('https://meta-crm-backend.onrender.com/api/facebook/login-url')
-    const data = await res.json()
-    if (data.success && data.url) {
-      window.location.href = data.url
-    } else {
-      setError('Facebook login setup mein error hai.')
+    setFbLoading(true)
+    setError('')
+    try {
+      const res = await fetch('https://meta-crm-backend.onrender.com/api/facebook/login-url')
+      const data = await res.json()
+      if (data.success && data.url) {
+        window.location.href = data.url
+      } else {
+        setError('Facebook login setup mein error hai.')
+        setFbLoading(false)
+      }
+    } catch (err) {
+      setError('Facebook se connect nahi ho paya. Dobara try karo.')
       setFbLoading(false)
     }
-  } catch (err) {
-    setError('Facebook se connect nahi ho paya. Dobara try karo.')
-    setFbLoading(false)
   }
-}
 
   return (
     <div className="min-h-screen bg-surface dark:bg-slate-950 flex">
@@ -106,7 +107,7 @@ export default function Login() {
             <p className="text-slate-500 dark:text-slate-400">Sign in to your CRM dashboard</p>
           </div>
 
-      <button
+          <button
             type="button"
             onClick={handleFacebookLogin}
             disabled={fbLoading}
@@ -118,7 +119,7 @@ export default function Login() {
             ) : (
               <><FacebookIcon />Continue with Facebook</>
             )}
-      </button>
+          </button>
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
