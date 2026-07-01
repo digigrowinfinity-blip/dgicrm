@@ -38,6 +38,24 @@ export default function Login() {
     }
   }
 
+  const handleFacebookLogin = async () => {
+  setFbLoading(true)
+  setError('')
+  try {
+    const res = await fetch('https://meta-crm-backend.onrender.com/api/facebook/login-url')
+    const data = await res.json()
+    if (data.success && data.url) {
+      window.location.href = data.url
+    } else {
+      setError('Facebook login setup mein error hai.')
+      setFbLoading(false)
+    }
+  } catch (err) {
+    setError('Facebook se connect nahi ho paya. Dobara try karo.')
+    setFbLoading(false)
+  }
+}
+
   return (
     <div className="min-h-screen bg-surface dark:bg-slate-950 flex">
       <motion.div
