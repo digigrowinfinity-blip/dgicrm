@@ -88,9 +88,19 @@ export default function Login() {
             <p className="text-slate-500 dark:text-slate-400">Sign in to your CRM dashboard</p>
           </div>
 
-          <button disabled className="w-full flex items-center justify-center gap-3 bg-[#1877F2]/50 text-white/70 font-semibold py-3 px-6 rounded-xl mb-6 cursor-not-allowed">
-            <FacebookIcon />Continue with Facebook (Coming Soon)
-          </button>
+      <button
+            type="button"
+            onClick={handleFacebookLogin}
+            disabled={fbLoading}
+            className="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-semibold py-3 px-6 rounded-xl mb-6 transition-colors"
+          >
+            {fbLoading ? (
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full" />
+            ) : (
+              <><FacebookIcon />Continue with Facebook</>
+            )}
+      </button>
 
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
