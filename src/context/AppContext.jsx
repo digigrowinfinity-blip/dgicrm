@@ -20,6 +20,28 @@ export function AppProvider({ children }) {
     localStorage.setItem('mlcrm_user', JSON.stringify(userData))
   }
 
+  // Merge new fields (e.g. business_name, trial info) into existing user
+  const updateUser = (partialData) => {
+    setUser(prev => {
+      const merged = { ...prev, ...partialData }
+      localStorage.setItem('mlcrm_user', JSON.stringify(merged))
+      return merged
+    })
+  }
+
+  // Pull fresh profile from backend (business_name, trial status, etc.) and merge
+  const refreshUser = async () => {
+    try {
+      const res = await authAPI.profile()
+      if (res?.user) {
+        updateUser(res.user)
+      }
+      return res?.user
+    } catch {
+      return null
+    }
+  }
+
   const logout = async () => {
     try { await authAPI.logout() } catch {}
     setUser(null)
@@ -27,7 +49,7 @@ export function AppProvider({ children }) {
   }
 
   return (
-    <AppContext.Provider value={{ user, login, logout, darkMode, setDarkMode, sidebarOpen, setSidebarOpen }}>
+    <AppContext.Provider value={{ user, login, logout, updateUser, refreshUser, darkMode, setDarkMode, sidebarOpen, setSidebarOpen }}>
       {children}
     </AppContext.Provider>
   )
