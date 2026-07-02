@@ -10,6 +10,7 @@ import Team from './pages/Team'
 import Settings from './pages/Settings'
 import FacebookCallback from './pages/FacebookCallback'
 import ProfileSetup from './pages/ProfileSetup'
+import Profile from './pages/Profile'
 
 function PrivateRoute({ children }) {
   const { user } = useApp()
@@ -36,6 +37,7 @@ function AppRoutes() {
         <Route path="leads/:id" element={<LeadDetails />} />
         <Route path="team" element={<Team />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
