@@ -45,7 +45,7 @@ export const authAPI = {
   login:   (email, password) => api.post('/auth/login', { email, password }),
   logout:  ()                => api.post('/auth/logout'),
   profile: ()                => api.get('/auth/profile'),
-  submitBusinessProfile: (data) => api.post('/auth/business-profile', data),   // 👈 YE NAYI LINE ADD KARNI HAI
+  submitBusinessProfile: (data) => api.post('/auth/business-profile', data),   // 👈 YE NAYI LINE ADD KARNI HAI 
 
 }
 
