@@ -8,17 +8,18 @@ import Leads from './pages/Leads'
 import LeadDetails from './pages/LeadDetails'
 import Team from './pages/Team'
 import Settings from './pages/Settings'
+import FacebookCallback from './pages/FacebookCallback'
 
 function PrivateRoute({ children }) {
   const { user } = useApp()
   return user ? children : <Navigate to="/login" replace />
 }
-
 function AppRoutes() {
   const { user } = useApp()
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/facebook-callback" element={<FacebookCallback />} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<Leads />} />
@@ -30,7 +31,6 @@ function AppRoutes() {
     </Routes>
   )
 }
-
 export default function App() {
   return (
     <AppProvider>
