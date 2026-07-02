@@ -1,26 +1,30 @@
-
 import React, { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 
 export default function FacebookCallback() {
-  const { login } = useApp()
+  const { login, refreshUser } = useApp()
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
   useEffect(() => {
-    const token = params.get('token')
-    const name = params.get('name')
-    const role = params.get('role')
-    const id = params.get('id')
-    const email = params.get('email')
+    const run = async () => {
+      const token = params.get('token')
+      const name = params.get('name')
+      const role = params.get('role')
+      const id = params.get('id')
+      const email = params.get('email')
 
-    if (token) {
-      login({ id, name, role, email, token })
-      navigate('/')
-    } else {
-      navigate('/login?error=facebook_failed')
+      if (token) {
+        login({ id, name, role, email, token })
+        // Fetch full profile (business_name, trial info) before routing
+        await refreshUser()
+        navigate('/')
+      } else {
+        navigate('/login?error=facebook_failed')
+      }
     }
+    run()
   }, [])
 
   return (
